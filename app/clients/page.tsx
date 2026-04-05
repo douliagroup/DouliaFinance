@@ -57,10 +57,10 @@ export default function ClientsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Gestion des <span className="text-[#32CD32]">Clients</span></h1>
-          <p className="text-steel mt-1">Gérez vos relations clients et suivez leur activité.</p>
+          <h1 className="text-2xl font-bold text-white">Gestion des <span className="text-lime">Clients</span></h1>
+          <p className="text-xs font-mono text-lime mt-1">{"// Gérez vos relations clients et suivez leur activité."}</p>
         </div>
-        <Button className="bg-[#32CD32] hover:bg-[#32CD32]/90 text-black font-bold">
+        <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-medium rounded-lg">
           <Plus className="w-4 h-4 mr-2" />
           Nouveau Client
         </Button>
@@ -73,17 +73,17 @@ export default function ClientsPage() {
         </div>
       )}
 
-      <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-[#2D3748]">
+      <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-steel" />
           <Input 
             placeholder="Rechercher un client..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8 pl-10 bg-[#1A1F2E] border-[#2D3748] text-white text-xs"
+            className="h-8 pl-10 bg-night-100 border-white/10 text-white text-xs"
           />
         </div>
-        <Button variant="outline" size="sm" className="bg-transparent border-[#2D3748] text-white hover:bg-white/5 h-8 text-xs">
+        <Button variant="outline" size="sm" className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 text-xs">
           Filtres
         </Button>
       </div>
@@ -91,11 +91,11 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredClients?.length > 0 ? filteredClients.map((client, i) => (
           <div key={client.id}>
-            <Card className="glass-card border-none p-4 group hover:glow-neon transition-all duration-300">
+            <Card className="glass-card border border-white/10 p-5 group hover:glow-neon transition-all duration-300">
               <div className="flex items-start justify-between mb-3">
-                <Avatar className="w-10 h-10 border-2 border-[#32CD32]/20">
+                <Avatar className="w-10 h-10 border-2 border-lime/20">
                   <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${client?.name || 'Inconnu'}`} />
-                  <AvatarFallback className="bg-[#1A1F2E] text-white text-xs">{client?.name?.charAt(0) || '?'}</AvatarFallback>
+                  <AvatarFallback className="bg-night-100 text-white text-xs">{client?.name?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <Button variant="ghost" size="icon" className="text-steel hover:text-white w-7 h-7">
                   <MoreVertical className="w-4 h-4" />
@@ -103,31 +103,31 @@ export default function ClientsPage() {
               </div>
               
               <div className="space-y-0.5 mb-3">
-                <h3 className="text-base font-bold text-white group-hover:text-[#32CD32] transition-colors">{client?.name || 'Client Inconnu'}</h3>
-                <Badge variant="outline" className="bg-white/5 border-[#2D3748] text-steel text-[9px] uppercase font-bold tracking-wider px-1.5 py-0">
-                  {client?.type || 'N/A'}
+                <h3 className="text-base font-bold text-white group-hover:text-lime transition-colors">{client?.name || 'Client Inconnu'}</h3>
+                <Badge variant="outline" className="bg-white/5 border-white/10 text-lime text-[9px] uppercase font-mono font-bold tracking-wider px-1.5 py-0">
+                  {"// "} {client?.type || 'N/A'}
                 </Badge>
               </div>
 
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center gap-2 text-xs text-steel">
-                  <Mail className="w-3.5 h-3.5" />
+                  <Mail className="w-3.5 h-3.5 text-lime" />
                   {client?.email || 'Non renseigné'}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-steel">
-                  <Phone className="w-3.5 h-3.5" />
+                  <Phone className="w-3.5 h-3.5 text-lime" />
                   {client?.phone || '+237 6XX XX XX XX'}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-[#2D3748]">
+              <div className="flex items-center justify-between pt-3 border-t border-white/10">
                 <Badge className={cn(
                   "font-bold text-[10px] px-2 py-0",
-                  client?.status === 'Actif' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-white/10 text-steel"
+                  client?.status === 'Actif' ? "bg-lime/10 text-lime" : "bg-white/10 text-steel"
                 )}>
                   {client?.status || 'Inactif'}
                 </Badge>
-                <Button variant="link" className="text-[#32CD32] p-0 h-auto font-bold text-xs">
+                <Button variant="link" className="text-lime p-0 h-auto font-bold text-xs">
                   Voir Profil
                 </Button>
               </div>

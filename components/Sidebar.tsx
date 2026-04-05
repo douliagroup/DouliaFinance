@@ -40,7 +40,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "h-screen fixed left-0 top-0 bg-[#0B0F1A]/80 backdrop-blur-xl border-r border-[#32CD32]/10 flex flex-col z-50 transition-all duration-300",
+        "h-screen fixed left-0 top-0 bg-gradient-to-b from-night-200 to-night border-r border-lime/10 flex flex-col z-50 transition-all duration-300",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -50,13 +50,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       )}>
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-10 w-6 h-6 bg-[#32CD32] rounded-full flex items-center justify-center text-black shadow-lg glow-neon hover:scale-110 transition-transform"
+          className="absolute -right-3 top-10 w-6 h-6 bg-lime rounded-full flex items-center justify-center text-night shadow-lg glow-neon hover:scale-110 transition-transform"
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
         <div className={cn(
-          "relative glow-neon rounded-xl overflow-hidden border border-[#32CD32]/30 bg-white/5 transition-all duration-300",
+          "relative glow-neon rounded-xl overflow-hidden border border-lime/30 bg-white/5 transition-all duration-300",
           isCollapsed ? "w-10 h-10" : "w-20 h-20"
         )}>
           <Image 
@@ -70,7 +70,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         
         {!isCollapsed && (
           <h1 className="text-xl font-bold tracking-tighter text-white whitespace-nowrap">
-            DOULIA <span className="text-[#32CD32]">FINANCE</span>
+            DOULIA <span className="text-lime">FINANCE</span>
           </h1>
         )}
       </div>
@@ -86,41 +86,41 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
                 isActive 
-                  ? "bg-[#32CD32]/10 text-[#32CD32] border border-[#32CD32]/20 glow-neon" 
+                  ? "bg-lime/10 text-lime border border-lime/20 glow-neon" 
                   : "text-steel hover:bg-white/5 hover:text-white",
                 isCollapsed && "justify-center px-0"
               )}
             >
               <item.icon className={cn(
                 "w-4.5 h-4.5 transition-colors z-10",
-                isActive ? "text-[#32CD32]" : "text-steel group-hover:text-white"
+                isActive ? "text-lime" : "text-steel group-hover:text-white"
               )} />
               {!isCollapsed && (
                 <span className="font-medium text-sm z-10 whitespace-nowrap">{item.name}</span>
               )}
               {isActive && (
-                <div className="absolute left-0 w-1 h-5 bg-[#32CD32] rounded-r-full" />
+                <div className="absolute left-0 w-1 h-5 bg-lime rounded-r-full" />
               )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#32CD32]/10">
+      <div className="p-4 border-t border-lime/10">
         <div className={cn(
-          "glass-card rounded-xl border border-[#32CD32]/20 ai-border-anim transition-all duration-300",
+          "glass-card rounded-xl border border-lime/20 ai-border-anim transition-all duration-300",
           isCollapsed ? "p-2 flex justify-center" : "p-3"
         )}>
           {!isCollapsed ? (
             <>
-              <p className="text-[10px] text-steel mb-0.5">Propulsé par</p>
-              <p className="text-xs font-bold text-[#32CD32] flex items-center gap-1.5">
+              <p className="text-[10px] font-mono text-lime mb-0.5">{"// Propulsé par"}</p>
+              <p className="text-xs font-bold text-lime flex items-center gap-1.5">
                 <Zap className="w-3 h-3" />
                 Douly CFO AI
               </p>
             </>
           ) : (
-            <Zap className="w-4 h-4 text-[#32CD32] animate-pulse" />
+            <Zap className="w-4 h-4 text-lime animate-pulse" />
           )}
         </div>
       </div>

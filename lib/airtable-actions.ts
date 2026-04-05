@@ -1,28 +1,23 @@
-import base, { TABLES } from './airtable';
+import { airtableFetch, TABLES } from './airtable';
 import { BudgetItem, Client, Project, Service, Document, AllData } from './types';
 
 async function fetchRecords<T>(tableId: string): Promise<T[]> {
   try {
-    const records = await base(tableId).select({
-      maxRecords: 100,
-      view: "Grid view"
-    }).all();
-    return records.map(r => ({ id: r.id, ...r.fields } as unknown as T));
+    const data = await airtableFetch(tableId, {
+      queryParams: '?maxRecords=100&view=Grid%20view'
+    });
+    return data.records.map((r: any) => ({ id: r.id, ...r.fields } as unknown as T));
   } catch (error: any) {
-    if (error.message?.includes('view') || error.statusCode === 404) {
-      console.warn(`View "Grid view" not found for table ${tableId}, trying without view.`);
-      try {
-        const records = await base(tableId).select({
-          maxRecords: 100
-        }).all();
-        return records.map(r => ({ id: r.id, ...r.fields } as unknown as T));
-      } catch (innerError) {
-        console.error(`Failed to fetch records for table ${tableId}:`, innerError);
-        throw innerError;
-      }
+    // If Grid view fails, try without view
+    try {
+      const data = await airtableFetch(tableId, {
+        queryParams: '?maxRecords=100'
+      });
+      return data.records.map((r: any) => ({ id: r.id, ...r.fields } as unknown as T));
+    } catch (innerError) {
+      console.error(`Failed to fetch records for table ${tableId}:`, innerError);
+      throw innerError;
     }
-    console.error(`Error fetching records for table ${tableId}:`, error);
-    throw error;
   }
 }
 
@@ -48,10 +43,11 @@ export async function getDocuments(): Promise<Document[]> {
 
 export async function saveSimulation(data: any): Promise<string> {
   try {
-    const record = await base(TABLES.SIMULATIONS).create([
-      { fields: data }
-    ]);
-    return record[0].id;
+    const response = await airtableFetch(TABLES.SIMULATIONS, {
+      method: 'POST',
+      body: { fields: data }
+    });
+    return response.id;
   } catch (error) {
     console.error('Error saving simulation:', error);
     throw error;

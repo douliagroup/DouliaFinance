@@ -1,15 +1,9 @@
-import Airtable from 'airtable';
+const AIRTABLE_PAT = process.env.AIRTABLE_PAT;
+const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appw5t8naTirx4fE0';
 
-if (!process.env.AIRTABLE_API_KEY) {
-  console.error('CRITICAL: AIRTABLE_API_KEY is missing from environment variables.');
-} else {
-  console.log('Airtable API Key detected (length:', process.env.AIRTABLE_API_KEY.length, ')');
+if (!AIRTABLE_PAT) {
+  console.error('CRITICAL: AIRTABLE_PAT is missing from environment variables.');
 }
-
-const baseId = process.env.AIRTABLE_BASE_ID || 'appw5t8naTirx4fE0';
-console.log('Using Airtable Base ID:', baseId);
-
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(baseId);
 
 export const TABLES = {
   BUDGET: 'tblw9TLaxLC6ryP4V',
@@ -20,4 +14,25 @@ export const TABLES = {
   SIMULATIONS: 'tblXkS1tzQNg9j2c73',
 };
 
-export default base;
+export async function airtableFetch(tableId: string, options: any = {}) {
+  const { method = 'GET', body, queryParams = '' } = options;
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${tableId}${queryParams}`;
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${AIRTABLE_PAT}`,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    next: { revalidate: 0 } // Disable caching for real-time data
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error(`Airtable Error (${response.status}):`, errorData);
+    throw new Error(JSON.stringify({ error: 'Airtable Error', details: errorData, status: response.status }));
+  }
+
+  return response.json();
+}

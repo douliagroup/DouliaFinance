@@ -54,7 +54,7 @@ export default function DoulyCFO() {
   const formatMarkdown = (text: string) => {
     // Simple regex-based markdown to HTML
     let html = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#32CD32] font-bold">$1</strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-lime font-bold">$1</strong>')
       .replace(/\n/g, '<br />');
     
     return <div className="text-xs leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
@@ -69,7 +69,7 @@ export default function DoulyCFO() {
     const doc = new jsPDF();
     
     doc.setFontSize(18);
-    doc.setTextColor(50, 205, 50); // Neon Green
+    doc.setTextColor(163, 230, 53); // Lime
     doc.text("Rapport Financier - DOULIA Finance Hub", 10, 20);
     
     doc.setFontSize(10);
@@ -199,10 +199,10 @@ export default function DoulyCFO() {
     <div className="fixed bottom-4 right-4 z-[100]">
       {isOpen && (
         <div className="mb-3 w-[320px] h-[450px] flex flex-col shadow-2xl">
-          <Card className="flex-1 flex flex-col bg-[#0B0F1A] border-[#32CD32]/20 overflow-hidden glass-card">
-            <div className="p-3 bg-[#32CD32]/10 backdrop-blur-md flex items-center justify-between border-b border-[#32CD32]/20">
+          <Card className="flex-1 flex flex-col bg-night border-lime/20 overflow-hidden glass-card">
+            <div className="p-3 bg-lime/10 backdrop-blur-md flex items-center justify-between border-b border-lime/20">
                 <div className="flex items-center gap-2">
-                  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#32CD32]/50 glow-neon">
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-lime/50 glow-neon">
                     <Image 
                       src="https://i.postimg.cc/BQT208Q9/Generated_Image_November_15_2025_3_43PM_(1).png" 
                       alt="Douly CFO" 
@@ -213,14 +213,14 @@ export default function DoulyCFO() {
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-xs">Douly CFO</h3>
-                    <span className="text-[#32CD32] text-[8px] uppercase font-bold tracking-wider flex items-center gap-1">
-                      <span className="w-1 h-1 bg-[#32CD32] rounded-full animate-pulse" />
-                      IA Omnisciente
+                    <span className="text-lime text-[8px] uppercase font-mono font-bold tracking-wider flex items-center gap-1">
+                      <span className="w-1 h-1 bg-lime rounded-full animate-pulse" />
+                      {"// IA Omnisciente"}
                     </span>
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={exportToPDF} className="text-steel hover:text-[#32CD32] w-7 h-7">
+                  <Button variant="ghost" size="icon" onClick={exportToPDF} className="text-steel hover:text-lime w-7 h-7">
                     <Download className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-steel hover:text-white w-7 h-7">
@@ -236,8 +236,8 @@ export default function DoulyCFO() {
                       <div className={cn(
                         "max-w-[85%] p-2.5 rounded-xl text-xs",
                         msg.role === 'user' 
-                          ? "bg-[#32CD32] text-black font-bold rounded-tr-none glow-neon" 
-                          : "bg-[#1A1F2E]/80 text-white border border-[#32CD32]/10 rounded-tl-none backdrop-blur-sm"
+                          ? "bg-lime text-night font-bold rounded-tr-none glow-neon" 
+                          : "bg-night-100/80 text-white border border-lime/10 rounded-tl-none backdrop-blur-sm"
                       )}>
                         {formatMarkdown(msg.content)}
                       </div>
@@ -245,9 +245,9 @@ export default function DoulyCFO() {
                   ))}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-[#1A1F2E]/80 text-white p-2.5 rounded-xl rounded-tl-none border border-[#32CD32]/10 flex items-center gap-2 backdrop-blur-sm">
-                        <Loader2 className="w-3 h-3 animate-spin text-[#32CD32]" />
-                        <span className="text-[10px] text-steel">Analyse en cours...</span>
+                      <div className="bg-night-100/80 text-white p-2.5 rounded-xl rounded-tl-none border border-lime/10 flex items-center gap-2 backdrop-blur-sm">
+                        <Loader2 className="w-3 h-3 animate-spin text-lime" />
+                        <span className="text-[10px] font-mono text-lime">{"// Analyse en cours..."}</span>
                       </div>
                     </div>
                   )}
@@ -255,7 +255,7 @@ export default function DoulyCFO() {
                 </div>
               </ScrollArea>
 
-              <div className="p-3 border-t border-[#32CD32]/10 bg-black/40 backdrop-blur-md">
+              <div className="p-3 border-t border-lime/10 bg-black/40 backdrop-blur-md">
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                   className="flex gap-2"
@@ -264,9 +264,9 @@ export default function DoulyCFO() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Question financière..."
-                    className="h-8 text-xs bg-[#1A1F2E] border-[#32CD32]/20 text-white placeholder:text-steel/50 focus-visible:ring-[#32CD32]"
+                    className="h-8 text-xs bg-night-50 border-lime/20 text-white placeholder:text-steel/50 focus-visible:ring-lime"
                   />
-                  <Button type="submit" size="icon" className="w-8 h-8 bg-[#32CD32] hover:bg-[#32CD32]/90 text-black shrink-0 glow-neon">
+                  <Button type="submit" size="icon" className="w-8 h-8 bg-lime hover:bg-lime-glow text-night shrink-0 glow-neon">
                     <Send className="w-3.5 h-3.5" />
                   </Button>
                 </form>
@@ -279,7 +279,7 @@ export default function DoulyCFO() {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "w-14 h-14 rounded-full shadow-2xl transition-all duration-500 glow-neon relative overflow-hidden border-2",
-          isOpen ? "border-red-500" : "border-[#32CD32]"
+          isOpen ? "border-red-500" : "border-lime"
         )}
       >
         <Image 

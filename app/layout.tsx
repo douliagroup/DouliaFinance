@@ -1,11 +1,19 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import { Inter } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import LayoutWrapper from '@/components/LayoutWrapper';
 import Script from 'next/script';
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+});
 
 export const metadata: Metadata = {
   title: 'DOULIA FINANCE',
@@ -14,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="fr" className={cn("font-sans dark", inter.variable)}>
+    <html lang="fr" className={cn("font-sans dark", spaceGrotesk.variable, jetbrainsMono.variable)}>
       <head>
         <Script 
           src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" 

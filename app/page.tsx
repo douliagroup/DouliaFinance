@@ -81,7 +81,7 @@ export default function Dashboard() {
       change: '+12.5%', 
       trend: 'up', 
       icon: Wallet,
-      color: 'text-[#32CD32]'
+      color: 'text-lime'
     },
     { 
       title: 'Projets Actifs', 
@@ -89,7 +89,7 @@ export default function Dashboard() {
       change: '+3', 
       trend: 'up', 
       icon: Briefcase,
-      color: 'text-blue-400'
+      color: 'text-lime'
     },
     { 
       title: 'Total Clients', 
@@ -97,7 +97,7 @@ export default function Dashboard() {
       change: '+2', 
       trend: 'up', 
       icon: Users,
-      color: 'text-purple-400'
+      color: 'text-lime'
     },
     { 
       title: 'Taux de Conversion', 
@@ -105,7 +105,7 @@ export default function Dashboard() {
       change: '+4.2%', 
       trend: 'up', 
       icon: Activity,
-      color: 'text-orange-400'
+      color: 'text-lime'
     },
   ];
 
@@ -121,14 +121,14 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Tableau de Bord <span className="text-[#32CD32]">DOULIA</span>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            Tableau de Bord <span className="text-lime">DOULIA</span>
           </h1>
-          <p className="text-steel mt-1">Bienvenue dans votre centre de commande financier intelligent.</p>
+          <p className="text-xs font-mono text-lime mt-1">{"// Bienvenue dans votre centre de commande financier intelligent."}</p>
         </div>
-        <div className="flex items-center gap-2 bg-[#32CD32]/10 px-4 py-2 rounded-full border border-[#32CD32]/20">
-          <Sparkles className="w-4 h-4 text-[#32CD32]" />
-          <span className="text-xs font-bold text-[#32CD32] uppercase tracking-wider">IA Optimisée</span>
+        <div className="flex items-center gap-2 bg-lime/10 px-4 py-2 rounded-full border border-lime/20">
+          <Sparkles className="w-4 h-4 text-lime" />
+          <span className="text-[10px] font-mono font-bold text-lime uppercase tracking-wider">{"// IA Optimisée"}</span>
         </div>
       </div>
 
@@ -145,10 +145,10 @@ export default function Dashboard() {
             <Card className="glass-card border-none overflow-hidden group hover:glow-neon transition-all duration-500 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-[#32CD32]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0 p-3 relative z-10">
-                <CardTitle className="text-[10px] font-bold text-steel uppercase tracking-widest">
-                  {stat.title}
+                <CardTitle className="text-[10px] font-mono text-lime uppercase tracking-widest">
+                  {"// "} {stat.title}
                 </CardTitle>
-                <div className={cn("p-1.5 rounded-lg bg-white/5 border border-white/10 group-hover:border-[#32CD32]/30 transition-colors", stat.color)}>
+                <div className={cn("p-1.5 rounded-lg bg-lime/10 border border-lime/20 group-hover:border-lime/40 transition-colors", stat.color)}>
                   <stat.icon className="w-3.5 h-3.5" />
                 </div>
               </CardHeader>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 <div className="flex items-center mt-1">
                   <div className={cn(
                     "flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold",
-                    stat.trend === 'up' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-red-400/10 text-red-400"
+                    stat.trend === 'up' ? "bg-lime/10 text-lime" : "bg-red-400/10 text-red-400"
                   )}>
                     {stat.trend === 'up' ? (
                       <ArrowUpRight className="w-2.5 h-2.5 mr-0.5" />
@@ -189,33 +189,33 @@ export default function Dashboard() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#32CD32" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#32CD32" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#A3E635" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#A3E635" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    stroke="#718096" 
+                    stroke="#8B9BB4" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false} 
                   />
                   <YAxis 
-                    stroke="#718096" 
+                    stroke="#8B9BB4" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false}
                     tickFormatter={(value) => `${value}`}
                   />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1A1F2E', border: '1px solid #2D3748', borderRadius: '8px' }}
-                    itemStyle={{ color: '#32CD32' }}
+                    contentStyle={{ backgroundColor: '#0B0F1A', border: '1px solid rgba(163, 230, 53, 0.2)', borderRadius: '8px' }}
+                    itemStyle={{ color: '#A3E635' }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="revenue" 
-                    stroke="#32CD32" 
+                    stroke="#A3E635" 
                     fillOpacity={1} 
                     fill="url(#colorRev)" 
                     strokeWidth={3}
@@ -230,7 +230,7 @@ export default function Dashboard() {
           <Card className="glass-card border-none p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-white">Performance des Services</h3>
-              <TrendingUp className="w-4 h-4 text-[#32CD32]" />
+              <TrendingUp className="w-4 h-4 text-lime" />
             </div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -238,23 +238,23 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    stroke="#718096" 
+                    stroke="#8B9BB4" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false} 
                   />
                   <YAxis 
-                    stroke="#718096" 
+                    stroke="#8B9BB4" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false} 
                   />
                   <Tooltip 
                     cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                    contentStyle={{ backgroundColor: '#1A1F2E', border: '1px solid #2D3748', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: '#0B0F1A', border: '1px solid rgba(163, 230, 53, 0.2)', borderRadius: '8px' }}
                   />
-                  <Bar dataKey="revenue" fill="#32CD32" radius={[4, 4, 0, 0]} barSize={30} />
-                  <Bar dataKey="expenses" fill="#4A5568" radius={[4, 4, 0, 0]} barSize={30} />
+                  <Bar dataKey="revenue" fill="#A3E635" radius={[4, 4, 0, 0]} barSize={30} />
+                  <Bar dataKey="expenses" fill="#5A6A80" radius={[4, 4, 0, 0]} barSize={30} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

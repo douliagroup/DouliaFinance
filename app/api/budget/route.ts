@@ -3,9 +3,9 @@ import { getBudget } from "@/lib/airtable-actions";
 
 export async function GET() {
   try {
-    if (!process.env.AIRTABLE_API_KEY) {
-      console.error('SERVER ERROR: AIRTABLE_API_KEY is missing');
-      return NextResponse.json({ error: "Configuration Airtable manquante (Clé API)" }, { status: 500 });
+    if (!process.env.AIRTABLE_PAT) {
+      console.error('SERVER ERROR: AIRTABLE_PAT is missing');
+      return NextResponse.json({ error: "Configuration Airtable manquante (PAT)" }, { status: 500 });
     }
     
     const data = await getBudget();

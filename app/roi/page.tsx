@@ -41,12 +41,28 @@ export default function ROISimulator() {
     if (!result) return;
     setIsSaving(true);
     try {
-      // In a real app, we'd call a server action or API route
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/roi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Service: formData.service,
+          Employes: parseInt(formData.employees),
+          SalaireMoyen: parseInt(formData.avgSalary),
+          GainEfficacite: parseInt(formData.timeSaved),
+          EconomieMensuelle: result.monthly,
+          EconomieAnnuelle: result.yearly,
+          Date: new Date().toISOString().split('T')[0]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la sauvegarde');
+      }
+
       setIsSaved(true);
     } catch (error) {
       console.error('Save error:', error);
+      alert("Erreur lors de la sauvegarde dans Airtable.");
     } finally {
       setIsSaving(false);
     }

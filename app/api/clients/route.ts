@@ -3,7 +3,7 @@ import { getClients } from "@/lib/airtable-actions";
 
 export async function GET() {
   try {
-    if (!process.env.AIRTABLE_API_KEY) {
+    if (!process.env.AIRTABLE_PAT) {
       return NextResponse.json({ error: "Configuration Airtable manquante" }, { status: 500 });
     }
     const data = await getClients();

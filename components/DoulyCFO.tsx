@@ -8,33 +8,12 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-
 import Image from 'next/image';
-
-import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
-
-const tools: { functionDeclarations: FunctionDeclaration[] }[] = [
-  {
-    functionDeclarations: [
-      {
-        name: "web_search",
-        description: "Effectue une recherche sur le web pour obtenir des informations financières ou technologiques récentes.",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {
-            query: { type: Type.STRING, description: "La requête de recherche." }
-          },
-          required: ["query"]
-        }
-      }
-    ]
-  }
-];
 
 export default function DoulyCFO() {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,97 +78,27 @@ export default function DoulyCFO() {
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      // 1. Fetch Context from API
-      const contextRes = await fetch('/api/chat');
-      const contextData = await contextRes.json();
-      const dataSummary = JSON.stringify(contextData);
-
-      // 2. Initialize Gemini
-      const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
-      const model = "gemini-3-flash-preview";
-      const systemInstruction = `Tu es Douly CFO, l'assistant financier intelligent de DOULIA. 
-      Ton rôle est d'aider l'utilisateur à gérer ses finances, analyser son budget, ses clients et ses services.
-      Sois professionnel, précis et utilise un ton encourageant. 
-      
-      RÈGLES DE FORMATAGE STRICTES :
-      - NE JAMAIS utiliser d'astérisques (*) ou d'étoiles dans tes réponses.
-      - NE JAMAIS utiliser de balises HTML.
-      - Pour mettre en gras les TITRES et les MOTS CLÉS, utilise uniquement la syntaxe Markdown standard **TEXTE**.
-      - N'utilise pas de tirets (-) pour les listes, utilise des points (.) ou des numéros.
-      
-      CONTEXTE OMNISCIENT (Données réelles de DOULIA) :
-      ${dataSummary}
-      
-      Utilise ces données pour prédire la santé financière et donner des recommandations stratégiques.
-      Tu as accès à des outils pour faire des recherches web si nécessaire.
-      Réponds toujours en français.`;
-
-      const contents = [
-        ...messages.map((m) => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.content }]
-        })),
-        { role: 'user', parts: [{ text: userMessage }] }
-      ];
-
-      // 3. Generate Content
-      let response = await ai.models.generateContent({
-        model,
-        contents: contents as any,
-        config: {
-          systemInstruction,
-          tools,
-        }
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
       });
 
-      let functionCalls = response.functionCalls;
+      const data = await response.json();
 
-      if (functionCalls) {
-        const toolResults = [];
-        for (const call of functionCalls) {
-          if (call.name === "web_search") {
-            const searchRes = await fetch('/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: (call.args as any).query }),
-            });
-            const searchData = await searchRes.json();
-            toolResults.push({
-              name: call.name,
-              response: { content: searchData },
-              id: call.id
-            });
-          }
-        }
-
-        // Send tool results back to model
-        response = await ai.models.generateContent({
-          model,
-          contents: [
-            ...contents,
-            response.candidates?.[0]?.content,
-            {
-              role: "user",
-              parts: toolResults.map(tr => ({
-                functionResponse: {
-                  name: tr.name,
-                  response: tr.response,
-                }
-              }))
-            }
-          ] as any,
-          config: { systemInstruction, tools }
-        });
+      if (!response.ok) {
+        throw new Error(data.error || 'Chat failed');
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: response.text || 'Désolé, je n\'ai pas pu générer de réponse.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: data.text || 'Désolé, je n\'ai pas pu générer de réponse.' }]);
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion et votre clé API.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion.' }]);
     } finally {
       setIsLoading(false);
     }

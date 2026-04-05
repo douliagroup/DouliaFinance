@@ -130,12 +130,12 @@ export default function ProjectsPage() {
         </div>
         
         <Dialog open={isNewProjectOpen} onOpenChange={setIsNewProjectOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger render={
             <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-bold rounded-lg glow-neon">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau Projet
             </Button>
-          </DialogTrigger>
+          } />
           <DialogContent className="glass-card border-white/10 text-white max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Lancer un <span className="text-lime">Nouveau Projet</span></DialogTitle>

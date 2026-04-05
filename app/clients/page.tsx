@@ -24,6 +24,9 @@ export default function ClientsPage() {
   const [isNewClientOpen, setIsNewClientOpen] = useState(false);
   const [isEditClientOpen, setIsEditClientOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Partial<Client>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,12 +148,12 @@ export default function ClientsPage() {
         </div>
         
         <Dialog open={isNewClientOpen} onOpenChange={setIsNewClientOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger render={
             <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-bold rounded-lg glow-neon">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau Client
             </Button>
-          </DialogTrigger>
+          } />
           <DialogContent className="glass-card border-white/10 text-white max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Ajouter un <span className="text-lime">Nouveau Client</span></DialogTitle>

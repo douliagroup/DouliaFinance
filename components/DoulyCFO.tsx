@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,8 +25,24 @@ export default function DoulyCFO() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(false);
+  const [context, setContext] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const fetchContext = async () => {
+      try {
+        const res = await fetch('/api/chat');
+        if (res.ok) {
+          const data = await res.json();
+          setContext(JSON.stringify(data));
+        }
+      } catch (err) {
+        console.error('Failed to fetch context:', err);
+      }
+    };
+    fetchContext();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -105,23 +122,107 @@ export default function DoulyCFO() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+      const geminiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      if (!geminiKey) throw new Error("Gemini API Key missing");
+
+      const ai = new GoogleGenAI({ apiKey: geminiKey });
+      const model = "gemini-3-flash-preview";
+      
+      const tools: { functionDeclarations: FunctionDeclaration[] }[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "web_search",
+              description: "Effectue une recherche sur le web pour obtenir des informations financières ou technologiques récentes.",
+              parameters: {
+                type: Type.OBJECT,
+                properties: {
+                  query: { type: Type.STRING, description: "La requête de recherche." }
+                },
+                required: ["query"]
+              }
+            }
+          ]
+        }
+      ];
+
+      const systemInstruction = `Tu es Douly CFO, l'assistant financier intelligent de DOULIA. 
+      Tu es un Expert Comptable puissant et stratège d'affaires, expert du marché Camerounais.
+      Ton rôle est d'aider l'utilisateur à gérer ses finances, analyser son budget, ses clients et ses services avec une vision stratégique globale.
+      Sois professionnel, précis, empathique et utilise un ton encourageant. 
+      
+      RÈGLES DE FORMATAGE STRICTES :
+      - Utilise uniquement la syntaxe Markdown standard **TEXTE** pour mettre en gras.
+      - N'utilise pas de balises HTML.
+      - Utilise des listes à puces (.) ou numérotées pour la clarté.
+      
+      CONTEXTE OMNISCIENT (Données réelles de DOULIA) :
+      ${context}
+      
+      Tu as une vue globale sur toute l'application. Utilise ces données pour prédire la santé financière, identifier des opportunités de croissance au Cameroun et donner des recommandations stratégiques de haut niveau.
+      Tu utilises Tavily pour la recherche web en temps réel (actualités fiscales, taux de change, tendances du marché camerounais) et Gemini pour la synthèse.
+      Réponds toujours en français.`;
+
+      const contents = newMessages.map((m: any) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.content }]
+      }));
+
+      let response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction,
+          tools,
+        }
       });
 
-      const data = await response.json();
+      let functionCalls = response.functionCalls;
 
-      if (!response.ok) throw new Error(data.error || 'Chat failed');
+      if (functionCalls) {
+        const toolResults = [];
+        for (const call of functionCalls) {
+          if (call.name === "web_search") {
+            const searchRes = await fetch('/api/search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: (call.args as any).query }),
+            });
+            const searchData = await searchRes.json();
+            toolResults.push({
+              name: call.name,
+              response: { content: searchData },
+              id: call.id
+            });
+          }
+        }
 
-      const assistantMessage = data.text || 'Désolé, je n\'ai pas pu générer de réponse.';
+        response = await ai.models.generateContent({
+          model,
+          contents: [
+            ...contents,
+            response.candidates?.[0]?.content,
+            {
+              role: "user",
+              parts: toolResults.map(tr => ({
+                functionResponse: {
+                  name: tr.name,
+                  response: tr.response,
+                }
+              }))
+            }
+          ] as any,
+          config: { systemInstruction, tools }
+        });
+      }
+
+      const assistantMessage = response.text || 'Désolé, je n\'ai pas pu générer de réponse.';
       setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
       
       if (isSpeakingEnabled) {
         speak(assistantMessage);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion.' }]);
     } finally {

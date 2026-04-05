@@ -6,17 +6,17 @@ if (!AIRTABLE_PAT) {
 }
 
 export const TABLES = {
-  BUDGET: 'tblw9TLaxLC6ryP4V',
-  CLIENTS: 'tblhm2PtG3en6ypxF',
-  PROJETS: 'tbl8ttAlGsdbzs6GM',
-  SERVICES: 'tblgdIuRWn9v3MDTY',
-  DOCUMENTS: 'tblsZalGrCHyVoP9a',
-  SIMULATIONS: 'tblXkS1tzQNg9j2c73',
+  BUDGET: 'BUDGET',
+  CLIENTS: 'Clients',
+  PROJETS: 'Projets Sur Mesure',
+  SERVICES: 'Services Catalogue',
+  DOCUMENTS: 'tblsZalGrCHyVoP9a', // Keep ID if not specified
+  SIMULATIONS: 'Simulations ROI',
 };
 
 export async function airtableFetch(tableId: string, options: any = {}) {
   const { method = 'GET', body, queryParams = '' } = options;
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${tableId}${queryParams}`;
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(tableId)}${queryParams}`;
 
   const response = await fetch(url, {
     method,

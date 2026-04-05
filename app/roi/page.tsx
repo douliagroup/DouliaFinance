@@ -45,13 +45,15 @@ export default function ROISimulator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          Service: formData.service,
-          Employes: parseInt(formData.employees),
-          SalaireMoyen: parseInt(formData.avgSalary),
-          GainEfficacite: parseInt(formData.timeSaved),
-          EconomieMensuelle: result.monthly,
-          EconomieAnnuelle: result.yearly,
-          Date: new Date().toISOString().split('T')[0]
+          client: "Client Simulation", // Default or could be an input
+          gain: result.yearly,
+          service: formData.service,
+          employees: parseInt(formData.employees),
+          avgSalary: parseInt(formData.avgSalary),
+          efficiencyGain: parseInt(formData.timeSaved),
+          monthlySavings: result.monthly,
+          annualSavings: result.yearly,
+          date: new Date().toISOString().split('T')[0]
         }),
       });
 

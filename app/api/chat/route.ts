@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getAllData } from "@/lib/airtable-actions";
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";

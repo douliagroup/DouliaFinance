@@ -10,10 +10,12 @@ export interface BudgetItem {
 export interface Client {
   id: string;
   name?: string;
+  contact?: string;
   email?: string;
   status?: string;
   type?: string;
   phone?: string;
+  sector?: string;
 }
 
 export interface Project {
@@ -23,6 +25,8 @@ export interface Project {
   status?: string;
   progress?: number;
   deadline?: string;
+  gain?: number;
+  price?: number;
 }
 
 export interface Service {
@@ -32,6 +36,8 @@ export interface Service {
   duration?: string;
   category?: string;
   description?: string;
+  setupPrice?: number;
+  monthlyPrice?: number;
 }
 
 export interface Document {

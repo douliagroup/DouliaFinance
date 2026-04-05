@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Loader2, Download } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, Loader2, Download, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -18,25 +18,115 @@ interface Message {
 export default function DoulyCFO() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Bonjour ! Je suis Douly, votre CFO virtuel. Comment puis-je vous aider avec vos finances aujourd\'hui ?' }
+    { role: 'assistant', content: 'Bonjour ! Je suis Douly, votre CFO virtuel expert du marché Camerounais. Comment puis-je vous aider avec vos finances aujourd\'hui ?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
+
+  // Speech to Text Setup
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'fr-FR';
+
+        recognitionRef.current.onresult = (event: any) => {
+          let interimTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              setInput(prev => prev + event.results[i][0].transcript);
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+      }
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
+
+  const speak = (text: string) => {
+    if (!isSpeakingEnabled || typeof window === 'undefined') return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.1; // Slightly higher for "empathy"
+    window.speechSynthesis.speak(utterance);
+  };
 
   const formatMarkdown = (text: string) => {
-    // Simple regex-based markdown to HTML
     let html = text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-lime font-bold">$1</strong>')
       .replace(/\n/g, '<br />');
     
     return <div className="text-xs leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
+
+    const userMessage = input.trim();
+    setInput('');
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Chat failed');
+
+      const assistantMessage = data.text || 'Désolé, je n\'ai pas pu générer de réponse.';
+      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      
+      if (isSpeakingEnabled) {
+        speak(assistantMessage);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion.' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const exportToPDF = () => {
@@ -73,41 +163,10 @@ export default function DoulyCFO() {
     doc.save("rapport-douly-cfo.pdf");
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput('');
-    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
-    setMessages(newMessages);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Chat failed');
-      }
-
-      setMessages(prev => [...prev, { role: 'assistant', content: data.text || 'Désolé, je n\'ai pas pu générer de réponse.' }]);
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion.' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="fixed bottom-4 right-4 z-[100]">
       {isOpen && (
-        <div className="mb-3 w-[320px] h-[450px] flex flex-col shadow-2xl">
+        <div className="mb-3 w-[350px] h-[500px] flex flex-col shadow-2xl">
           <Card className="flex-1 flex flex-col bg-night border-lime/20 overflow-hidden glass-card">
             <div className="p-3 bg-lime/10 backdrop-blur-md flex items-center justify-between border-b border-lime/20">
                 <div className="flex items-center gap-2">
@@ -121,14 +180,19 @@ export default function DoulyCFO() {
                     />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-xs">Douly CFO</h3>
-                    <span className="text-lime text-[8px] uppercase font-mono font-bold tracking-wider flex items-center gap-1">
-                      <span className="w-1 h-1 bg-lime rounded-full animate-pulse" />
-                      {"// IA Omnisciente"}
-                    </span>
+                    <h3 className="text-white font-bold text-xs leading-none">Douly CFO</h3>
+                    <p className="text-[9px] text-lime/70 font-medium mt-0.5">Finance Analyse Doulia</p>
                   </div>
                 </div>
                 <div className="flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsSpeakingEnabled(!isSpeakingEnabled)} 
+                    className={cn("w-7 h-7", isSpeakingEnabled ? "text-lime" : "text-steel")}
+                  >
+                    {isSpeakingEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={exportToPDF} className="text-steel hover:text-lime w-7 h-7">
                     <Download className="w-4 h-4" />
                   </Button>
@@ -138,7 +202,7 @@ export default function DoulyCFO() {
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 p-3">
+              <ScrollArea className="flex-1 p-3 overflow-y-auto">
                 <div className="space-y-3">
                   {messages.map((msg, i) => (
                     <div key={i} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
@@ -169,10 +233,22 @@ export default function DoulyCFO() {
                   onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                   className="flex gap-2"
                 >
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleListening}
+                    className={cn(
+                      "w-8 h-8 shrink-0 rounded-full border border-white/10",
+                      isListening ? "bg-red-500 text-white animate-pulse" : "bg-white/5 text-steel hover:text-lime"
+                    )}
+                  >
+                    {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                  </Button>
                   <Input 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Question financière..."
+                    placeholder={isListening ? "Je vous écoute..." : "Question financière..."}
                     className="h-8 text-xs bg-night-50 border-lime/20 text-white placeholder:text-steel/50 focus-visible:ring-lime"
                   />
                   <Button type="submit" size="icon" className="w-8 h-8 bg-lime hover:bg-lime-glow text-night shrink-0 glow-neon">

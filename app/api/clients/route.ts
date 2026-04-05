@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from "next/server";
-import { getClients } from "@/lib/airtable-actions";
+import { getClients, createClient, updateClient } from "@/lib/airtable-actions";
 
 export async function GET() {
   try {
@@ -13,5 +13,27 @@ export async function GET() {
   } catch (error: any) {
     console.error('Clients API Error:', error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const data = await req.json();
+    const result = await createClient(data);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error('Create Client Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const { id, ...data } = await req.json();
+    const result = await updateClient(id, data);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error('Update Client Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

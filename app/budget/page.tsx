@@ -11,11 +11,15 @@ import {
   Plus,
   Search,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Table, 
   TableBody, 
@@ -47,29 +51,56 @@ export default function BudgetPage() {
   const [error, setError] = useState<string | null>(null);
   const [budgetData, setBudgetData] = useState<BudgetItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState<Partial<BudgetItem>>({
+    date: new Date().toISOString().split('T')[0],
+    category: 'Ventes',
+    description: '',
+    type: 'Revenue',
+    amount: 0
+  });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/budget');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la récupération des données');
+      setBudgetData(data);
+    } catch (err: any) {
+      console.error('Error fetching budget:', err);
+      setError(err.message || 'Une erreur inattendue est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch('/api/budget');
-        const data = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(data.error || 'Erreur lors de la récupération des données');
-        }
-        
-        setBudgetData(data);
-      } catch (err: any) {
-        console.error('Error fetching budget:', err);
-        setError(err.message || 'Une erreur inattendue est survenue');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error('Erreur lors de l\'enregistrement');
+      setIsDialogOpen(false);
+      setFormData({ date: new Date().toISOString().split('T')[0], category: 'Ventes', description: '', type: 'Revenue', amount: 0 });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const totalRevenues = budgetData.reduce((acc, curr) => curr.type === 'Revenue' ? acc + (curr.amount || 0) : acc, 0);
   const totalExpenses = budgetData.reduce((acc, curr) => curr.type === 'Expense' ? acc + (curr.amount || 0) : acc, 0);
@@ -88,7 +119,7 @@ export default function BudgetPage() {
   if (loading) {
     return (
       <div className="h-[80vh] flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#32CD32]" />
+        <Loader2 className="w-12 h-12 animate-spin text-lime" />
       </div>
     );
   }
@@ -105,7 +136,10 @@ export default function BudgetPage() {
             <Download className="w-4 h-4 mr-2" />
             Exporter
           </Button>
-          <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-medium rounded-lg">
+          <Button 
+            onClick={() => setIsDialogOpen(true)}
+            className="bg-gradient-to-br from-lime to-lime-dim text-night font-bold rounded-lg glow-neon"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle Entrée
           </Button>
@@ -268,6 +302,85 @@ export default function BudgetPage() {
           </Table>
         </div>
       </Card>
+
+      {/* New Entry Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="glass-card border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Nouvelle <span className="text-lime">Entrée Budget</span></DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Date</Label>
+                <Input 
+                  type="date"
+                  required
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  className="bg-night-100 border-white/10 text-white" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Type</Label>
+                <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v as 'Revenue' | 'Expense'})}>
+                  <SelectTrigger className="bg-night-100 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-night-100 border-white/10 text-white">
+                    <SelectItem value="Revenue">Revenu</SelectItem>
+                    <SelectItem value="Expense">Dépense</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-steel">Catégorie</Label>
+              <Select value={formData.category} onValueChange={(v) => setFormData({...formData, category: v})}>
+                <SelectTrigger className="bg-night-100 border-white/10 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-night-100 border-white/10 text-white">
+                  <SelectItem value="Ventes">Ventes</SelectItem>
+                  <SelectItem value="Services">Services</SelectItem>
+                  <SelectItem value="Salaires">Salaires</SelectItem>
+                  <SelectItem value="Loyer">Loyer</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Divers">Divers</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-steel">Montant (XAF)</Label>
+              <Input 
+                type="number"
+                required
+                value={formData.amount}
+                onChange={(e) => setFormData({...formData, amount: parseInt(e.target.value)})}
+                className="bg-night-100 border-white/10 text-white" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-steel">Description</Label>
+              <Input 
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="bg-night-100 border-white/10 text-white" 
+                placeholder="Détails de la transaction..."
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full bg-lime text-night font-bold glow-neon"
+              >
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ajouter l'entrée"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

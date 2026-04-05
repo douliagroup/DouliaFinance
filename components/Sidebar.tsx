@@ -114,9 +114,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           {!isCollapsed ? (
             <>
               <p className="text-[10px] font-mono text-lime mb-0.5">{"// Propulsé par"}</p>
-              <p className="text-xs font-bold text-lime flex items-center gap-1.5">
+              <p className="text-xs font-bold text-lime flex items-center gap-1.5 uppercase tracking-tighter">
                 <Zap className="w-3 h-3" />
-                Douly CFO AI
+                DOULIA
               </p>
             </>
           ) : (

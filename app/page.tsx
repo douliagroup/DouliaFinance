@@ -126,9 +126,17 @@ export default function Dashboard() {
           </h1>
           <p className="text-xs font-mono text-lime mt-1">{"// Bienvenue dans votre centre de commande financier intelligent."}</p>
         </div>
-        <div className="flex items-center gap-2 bg-lime/10 px-4 py-2 rounded-full border border-lime/20">
-          <Sparkles className="w-4 h-4 text-lime" />
-          <span className="text-[10px] font-mono font-bold text-lime uppercase tracking-wider">{"// IA Optimisée"}</span>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex flex-col items-end">
+            <p className="text-[10px] font-mono text-lime uppercase tracking-widest">{"// Temps Réel"}</p>
+            <p className="text-sm font-bold text-white tabular-nums">
+              {new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} | {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-lime/10 px-4 py-2 rounded-full border border-lime/20 glow-neon">
+            <Sparkles className="w-4 h-4 text-lime" />
+            <span className="text-[10px] font-mono font-bold text-lime uppercase tracking-wider">{"// DOULIA OMNI-IA"}</span>
+          </div>
         </div>
       </div>
 

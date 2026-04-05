@@ -67,14 +67,10 @@ export default function ClientsPage() {
       </div>
 
       {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400"
-        >
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
           <AlertTriangle className="w-5 h-5" />
           <p className="text-sm font-medium">Erreur Airtable : {error}</p>
-        </motion.div>
+        </div>
       )}
 
       <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-[#2D3748]">
@@ -93,18 +89,13 @@ export default function ClientsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredClients.map((client, i) => (
-          <motion.div
-            key={client.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
+        {filteredClients?.length > 0 ? filteredClients.map((client, i) => (
+          <div key={client.id}>
             <Card className="glass-card border-none p-4 group hover:glow-neon transition-all duration-300">
               <div className="flex items-start justify-between mb-3">
                 <Avatar className="w-10 h-10 border-2 border-[#32CD32]/20">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} />
-                  <AvatarFallback className="bg-[#1A1F2E] text-white text-xs">{client.name[0]}</AvatarFallback>
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${client?.name || 'Inconnu'}`} />
+                  <AvatarFallback className="bg-[#1A1F2E] text-white text-xs">{client?.name?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <Button variant="ghost" size="icon" className="text-steel hover:text-white w-7 h-7">
                   <MoreVertical className="w-4 h-4" />
@@ -112,37 +103,41 @@ export default function ClientsPage() {
               </div>
               
               <div className="space-y-0.5 mb-3">
-                <h3 className="text-base font-bold text-white group-hover:text-[#32CD32] transition-colors">{client.name}</h3>
+                <h3 className="text-base font-bold text-white group-hover:text-[#32CD32] transition-colors">{client?.name || 'Client Inconnu'}</h3>
                 <Badge variant="outline" className="bg-white/5 border-[#2D3748] text-steel text-[9px] uppercase font-bold tracking-wider px-1.5 py-0">
-                  {client.type}
+                  {client?.type || 'N/A'}
                 </Badge>
               </div>
 
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center gap-2 text-xs text-steel">
                   <Mail className="w-3.5 h-3.5" />
-                  {client.email}
+                  {client?.email || 'Non renseigné'}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-steel">
                   <Phone className="w-3.5 h-3.5" />
-                  +237 6XX XX XX XX
+                  {client?.phone || '+237 6XX XX XX XX'}
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-[#2D3748]">
                 <Badge className={cn(
                   "font-bold text-[10px] px-2 py-0",
-                  client.status === 'Actif' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-white/10 text-steel"
+                  client?.status === 'Actif' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-white/10 text-steel"
                 )}>
-                  {client.status}
+                  {client?.status || 'Inactif'}
                 </Badge>
                 <Button variant="link" className="text-[#32CD32] p-0 h-auto font-bold text-xs">
                   Voir Profil
                 </Button>
               </div>
             </Card>
-          </motion.div>
-        ))}
+          </div>
+        )) : (
+          <div className="col-span-full text-center py-12 text-steel">
+            Aucun client trouvé.
+          </div>
+        )}
       </div>
     </div>
   );

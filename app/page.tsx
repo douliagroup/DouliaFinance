@@ -121,13 +121,9 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold tracking-tight text-white"
-          >
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             Tableau de Bord <span className="text-[#32CD32]">DOULIA</span>
-          </motion.h1>
+          </h1>
           <p className="text-steel mt-1">Bienvenue dans votre centre de commande financier intelligent.</p>
         </div>
         <div className="flex items-center gap-2 bg-[#32CD32]/10 px-4 py-2 rounded-full border border-[#32CD32]/20">
@@ -137,26 +133,16 @@ export default function Dashboard() {
       </div>
 
       {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400"
-        >
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
           <AlertTriangle className="w-5 h-5" />
           <p className="text-sm font-medium">Erreur Airtable : {error}</p>
-        </motion.div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            whileHover={{ y: -5, scale: 1.02 }}
-          >
-            <Card className="glass-card border-none overflow-hidden group hover:glow-neon transition-all duration-500 ai-border-anim relative">
+          <div key={stat.title}>
+            <Card className="glass-card border-none overflow-hidden group hover:glow-neon transition-all duration-500 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-[#32CD32]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0 p-3 relative z-10">
                 <CardTitle className="text-[10px] font-bold text-steel uppercase tracking-widest">
@@ -184,16 +170,12 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div>
           <Card className="glass-card border-none p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-white">Flux de Trésorerie</h3>
@@ -242,13 +224,9 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-        >
+        <div>
           <Card className="glass-card border-none p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-white">Performance des Services</h3>
@@ -281,7 +259,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

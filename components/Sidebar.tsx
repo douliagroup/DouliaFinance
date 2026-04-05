@@ -69,13 +69,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         </div>
         
         {!isCollapsed && (
-          <motion.h1 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-xl font-bold tracking-tighter text-white whitespace-nowrap"
-          >
+          <h1 className="text-xl font-bold tracking-tighter text-white whitespace-nowrap">
             DOULIA <span className="text-[#32CD32]">FINANCE</span>
-          </motion.h1>
+          </h1>
         )}
       </div>
 
@@ -103,10 +99,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <span className="font-medium text-sm z-10 whitespace-nowrap">{item.name}</span>
               )}
               {isActive && (
-                <motion.div
-                  layoutId="active-nav"
-                  className="absolute left-0 w-1 h-5 bg-[#32CD32] rounded-r-full"
-                />
+                <div className="absolute left-0 w-1 h-5 bg-[#32CD32] rounded-r-full" />
               )}
             </Link>
           );

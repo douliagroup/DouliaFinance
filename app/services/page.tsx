@@ -66,14 +66,10 @@ export default function ServicesPage() {
       </div>
 
       {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400"
-        >
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
           <AlertTriangle className="w-5 h-5" />
           <p className="text-sm font-medium">Erreur Airtable : {error}</p>
-        </motion.div>
+        </div>
       )}
 
       <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-[#2D3748]">
@@ -89,26 +85,21 @@ export default function ServicesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredServices.map((service, i) => (
-          <motion.div
-            key={service.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
+        {filteredServices?.length > 0 ? filteredServices.map((service, i) => (
+          <div key={service.id}>
             <Card className="glass-card border-none p-4 group hover:glow-neon transition-all duration-300 h-full flex flex-col">
               <div className="flex items-start justify-between mb-3">
                 <div className="w-10 h-10 bg-[#32CD32]/10 rounded-lg flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-[#32CD32]" />
                 </div>
                 <Badge className="bg-[#32CD32]/10 text-[#32CD32] border-[#32CD32]/20 text-[10px] px-1.5 py-0">
-                  {service.category}
+                  {service?.category || 'N/A'}
                 </Badge>
               </div>
               
               <div className="space-y-1 mb-3 flex-1">
-                <h3 className="text-base font-bold text-white group-hover:text-[#32CD32] transition-colors">{service.name}</h3>
-                <p className="text-xs text-steel leading-relaxed">{service.description}</p>
+                <h3 className="text-base font-bold text-white group-hover:text-[#32CD32] transition-colors">{service?.name || 'Service sans nom'}</h3>
+                <p className="text-xs text-steel leading-relaxed">{service?.description || 'Aucune description'}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4 pt-3 border-t border-[#2D3748]">
@@ -117,14 +108,14 @@ export default function ServicesPage() {
                     <DollarSign className="w-2.5 h-2.5" />
                     Prix
                   </p>
-                  <p className="text-base font-bold text-white">{service.price} XAF</p>
+                  <p className="text-base font-bold text-white">{service?.price || '0'} XAF</p>
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[9px] uppercase font-bold text-steel tracking-widest flex items-center gap-1">
                     <Clock className="w-2.5 h-2.5" />
                     Cycle
                   </p>
-                  <p className="text-base font-bold text-white">{service.duration}</p>
+                  <p className="text-base font-bold text-white">{service?.duration || 'N/A'}</p>
                 </div>
               </div>
 
@@ -132,8 +123,12 @@ export default function ServicesPage() {
                 Modifier
               </Button>
             </Card>
-          </motion.div>
-        ))}
+          </div>
+        )) : (
+          <div className="col-span-full text-center py-12 text-steel">
+            Aucun service trouvé.
+          </div>
+        )}
       </div>
     </div>
   );

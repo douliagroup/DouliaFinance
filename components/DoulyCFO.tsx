@@ -52,12 +52,9 @@ export default function DoulyCFO() {
   }, [messages]);
 
   const formatMarkdown = (text: string) => {
-    // Simple regex-based markdown to HTML for Phase 2
+    // Simple regex-based markdown to HTML
     let html = text
-      .replace(/### (.*?)(\n|$)/g, '<h3 class="text-[#32CD32] font-bold mt-2 mb-1 text-sm">$1</h3>')
-      .replace(/\*\* (.*?)\*\*/g, '<strong class="text-[#32CD32]">$1</strong>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#32CD32]">$1</strong>')
-      .replace(/- (.*?)(\n|$)/g, '<li class="ml-4 list-disc text-steel text-xs">$1</li>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#32CD32] font-bold">$1</strong>')
       .replace(/\n/g, '<br />');
     
     return <div className="text-xs leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
@@ -118,13 +115,18 @@ export default function DoulyCFO() {
       Ton rôle est d'aider l'utilisateur à gérer ses finances, analyser son budget, ses clients et ses services.
       Sois professionnel, précis et utilise un ton encourageant. 
       
+      RÈGLES DE FORMATAGE STRICTES :
+      - NE JAMAIS utiliser d'astérisques (*) ou d'étoiles dans tes réponses.
+      - NE JAMAIS utiliser de balises HTML.
+      - Pour mettre en gras les TITRES et les MOTS CLÉS, utilise uniquement la syntaxe Markdown standard **TEXTE**.
+      - N'utilise pas de tirets (-) pour les listes, utilise des points (.) ou des numéros.
+      
       CONTEXTE OMNISCIENT (Données réelles de DOULIA) :
       ${dataSummary}
       
       Utilise ces données pour prédire la santé financière et donner des recommandations stratégiques.
       Tu as accès à des outils pour faire des recherches web si nécessaire.
-      Réponds toujours en français. 
-      Formate tes réponses avec du Markdown pour une meilleure lisibilité.`;
+      Réponds toujours en français.`;
 
       const contents = [
         ...messages.map((m) => ({
@@ -195,16 +197,10 @@ export default function DoulyCFO() {
 
   return (
     <div className="fixed bottom-4 right-4 z-[100]">
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="mb-3 w-[320px] h-[450px] flex flex-col shadow-2xl"
-          >
-            <Card className="flex-1 flex flex-col bg-[#0B0F1A] border-[#32CD32]/20 overflow-hidden glass-card ai-border-anim">
-              <div className="p-3 bg-[#32CD32]/10 backdrop-blur-md flex items-center justify-between border-b border-[#32CD32]/20">
+      {isOpen && (
+        <div className="mb-3 w-[320px] h-[450px] flex flex-col shadow-2xl">
+          <Card className="flex-1 flex flex-col bg-[#0B0F1A] border-[#32CD32]/20 overflow-hidden glass-card">
+            <div className="p-3 bg-[#32CD32]/10 backdrop-blur-md flex items-center justify-between border-b border-[#32CD32]/20">
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#32CD32]/50 glow-neon">
                     <Image 
@@ -275,14 +271,11 @@ export default function DoulyCFO() {
                   </Button>
                 </form>
               </div>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </Card>
+        </div>
+      )}
 
-      <motion.button
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        whileTap={{ scale: 0.9 }}
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "w-14 h-14 rounded-full shadow-2xl transition-all duration-500 glow-neon relative overflow-hidden border-2",
@@ -301,7 +294,7 @@ export default function DoulyCFO() {
             <X className="w-6 h-6 text-white" />
           </div>
         )}
-      </motion.button>
+      </button>
     </div>
   );
 }

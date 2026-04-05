@@ -113,14 +113,10 @@ export default function BudgetPage() {
       </div>
 
       {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400"
-        >
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-400">
           <AlertTriangle className="w-5 h-5" />
           <p className="text-sm font-medium">Erreur de connexion à Airtable : {error}</p>
-        </motion.div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -240,25 +236,25 @@ export default function BudgetPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.length > 0 ? filteredData.map((item) => (
+              {filteredData?.length > 0 ? filteredData.map((item) => (
                 <TableRow key={item.id} className="border-[#2D3748] hover:bg-white/5 transition-colors h-8">
-                  <TableCell className="text-white text-xs py-1.5">{item.date || 'N/A'}</TableCell>
+                  <TableCell className="text-white text-xs py-1.5">{item?.date || 'N/A'}</TableCell>
                   <TableCell className="py-1.5">
                     <Badge variant="outline" className="bg-white/5 border-[#2D3748] text-steel text-[9px] px-1.5 py-0">
-                      {item.category}
+                      {item?.category || 'N/A'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-white text-xs py-1.5">{item.description}</TableCell>
+                  <TableCell className="text-white text-xs py-1.5">{item?.description || 'Sans description'}</TableCell>
                   <TableCell className="py-1.5">
                     <Badge className={cn(
                       "font-bold text-[9px] px-1.5 py-0",
-                      item.type === 'Revenue' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-red-400/10 text-red-400"
+                      item?.type === 'Revenue' ? "bg-[#32CD32]/10 text-[#32CD32]" : "bg-red-400/10 text-red-400"
                     )}>
-                      {item.type === 'Revenue' ? 'Revenu' : 'Dépense'}
+                      {item?.type === 'Revenue' ? 'Revenu' : 'Dépense'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-bold text-white text-xs py-1.5">
-                    {item.amount?.toLocaleString()} XAF
+                    {(item?.amount || 0).toLocaleString()} XAF
                   </TableCell>
                 </TableRow>
               )) : (

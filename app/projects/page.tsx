@@ -2,28 +2,42 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { FolderKanban, Plus, Search, Calendar, User, Clock, Loader2, CheckCircle2, AlertCircle, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FolderKanban, Plus, Search, Calendar, User, Clock, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Briefcase, TrendingUp, DollarSign } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Header from '@/components/Header';
 import { cn } from '@/lib/utils';
-import { Project, Client } from '@/lib/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from '@/lib/utils';
+import { Project } from '@/lib/types';
 
 export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
-  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState<Partial<Project>>({
     name: '',
     client: '',
@@ -38,19 +52,14 @@ export default function ProjectsPage() {
     try {
       setLoading(true);
       setError(null);
-      const [projectsRes, clientsRes] = await Promise.all([
-        fetch('/api/projects'),
-        fetch('/api/clients')
-      ]);
+      const res = await fetch('/api/projects');
+      const data = await res.json();
       
-      const projectsData = await projectsRes.json();
-      const clientsData = await clientsRes.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur lors du chargement des projets');
+      }
       
-      if (!projectsRes.ok) throw new Error(projectsData.error || 'Erreur projets');
-      if (!clientsRes.ok) throw new Error(clientsData.error || 'Erreur clients');
-      
-      setProjects(projectsData);
-      setClients(clientsData);
+      setProjects(data);
     } catch (err: any) {
       console.error('Error fetching projects:', err);
       setError(err.message || 'Une erreur est survenue');
@@ -65,18 +74,34 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!newProject.name) return;
+    
     try {
+      setIsSubmitting(true);
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProject),
+        body: JSON.stringify(newProject)
       });
-      if (!res.ok) throw new Error('Erreur lors de la création');
-      setIsNewProjectOpen(false);
-      setNewProject({ name: '', client: '', status: 'En cours', progress: 0, deadline: '', gain: 0, price: 0 });
-      fetchData();
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erreur lors de la création');
+      }
+      
+      await fetchData();
+      setIsCreateOpen(false);
+      setNewProject({
+        name: '',
+        client: '',
+        status: 'En cours',
+        progress: 0,
+        deadline: '',
+        gain: 0,
+        price: 0
+      });
     } catch (err: any) {
+      console.error('Error creating project:', err);
       alert(err.message);
     } finally {
       setIsSubmitting(false);
@@ -86,17 +111,29 @@ export default function ProjectsPage() {
   const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
-    setIsSubmitting(true);
+    
     try {
+      setIsSubmitting(true);
       const res = await fetch('/api/projects', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedProject),
+        body: JSON.stringify({
+          id: selectedProject.id,
+          status: selectedProject.status,
+          progress: selectedProject.progress,
+          deadline: selectedProject.deadline
+        })
       });
-      if (!res.ok) throw new Error('Erreur lors de la mise à jour');
-      setIsEditProjectOpen(false);
-      fetchData();
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erreur lors de la mise à jour');
+      }
+      
+      await fetchData();
+      setIsEditOpen(false);
     } catch (err: any) {
+      console.error('Error updating project:', err);
       alert(err.message);
     } finally {
       setIsSubmitting(false);
@@ -107,11 +144,6 @@ export default function ProjectsPage() {
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.client?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const openEdit = (project: Project) => {
-    setSelectedProject(project);
-    setIsEditProjectOpen(true);
-  };
 
   if (loading) {
     return (
@@ -129,76 +161,125 @@ export default function ProjectsPage() {
           <p className="text-xs font-mono text-lime mt-1">{"// Suivez l'avancement de vos missions et projets clients."}</p>
         </div>
         
-        <Dialog open={isNewProjectOpen} onOpenChange={setIsNewProjectOpen}>
-          <DialogTrigger render={
-            <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-bold rounded-lg glow-neon">
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau Projet
-            </Button>
-          } />
-          <DialogContent className="glass-card border-white/10 text-white max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Lancer un <span className="text-lime">Nouveau Projet</span></DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateProject} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Nom du Projet</Label>
-                <Input 
-                  required
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-                  className="bg-night-100 border-white/10 text-white h-9" 
-                  placeholder="Ex: Audit Finance 2024"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Client</Label>
-                <Select 
-                  value={newProject.client} 
-                  onValueChange={(v) => setNewProject({...newProject, client: v})}
-                >
-                  <SelectTrigger className="bg-night-100 border-white/10 text-white h-9">
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-night-100 border-white/10 text-white">
-                    {clients.map(c => (
-                      <SelectItem key={c.id} value={c.name || ''}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center gap-4">
+          <Header />
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-br from-lime to-lime-dim text-night font-medium rounded-lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau Projet
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] bg-night-200 border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">Lancer un <span className="text-lime">Nouveau Projet</span></DialogTitle>
+                <DialogDescription className="text-steel text-xs font-mono">
+                  {"// Initialisez une nouvelle mission client dans Airtable."}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <form onSubmit={handleCreateProject} className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-steel">Deadline</Label>
-                  <Input 
-                    type="date"
-                    value={newProject.deadline}
-                    onChange={(e) => setNewProject({...newProject, deadline: e.target.value})}
-                    className="bg-night-100 border-white/10 text-white h-9" 
-                  />
+                  <Label htmlFor="name" className="text-xs text-steel uppercase tracking-wider">Nom du Projet</Label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                    <Input 
+                      id="name" 
+                      placeholder="Ex: Automatisation CRM" 
+                      className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                      value={newProject.name}
+                      onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                      required
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-steel">Prix Proposé (XAF)</Label>
-                  <Input 
-                    type="number"
-                    value={newProject.price}
-                    onChange={(e) => setNewProject({...newProject, price: parseInt(e.target.value)})}
-                    className="bg-night-100 border-white/10 text-white h-9" 
-                  />
+                  <Label htmlFor="client" className="text-xs text-steel uppercase tracking-wider">Client</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                    <Input 
+                      id="client" 
+                      placeholder="Nom du client" 
+                      className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                      value={newProject.client}
+                      onChange={(e) => setNewProject({...newProject, client: e.target.value})}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              <DialogFooter className="pt-4">
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full bg-lime text-night font-bold glow-neon"
-                >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer le Projet"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="deadline" className="text-xs text-steel uppercase tracking-wider">Deadline</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                      <Input 
+                        id="deadline" 
+                        type="date"
+                        className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                        value={newProject.deadline}
+                        onChange={(e) => setNewProject({...newProject, deadline: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-steel uppercase tracking-wider">Statut Initial</Label>
+                    <Select value={newProject.status} onValueChange={(val) => setNewProject({...newProject, status: val})}>
+                      <SelectTrigger className="bg-white/5 border-white/10 h-10 text-sm w-full">
+                        <SelectValue placeholder="Statut" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-night-200 border-white/10 text-white">
+                        <SelectItem value="En cours">En cours</SelectItem>
+                        <SelectItem value="En attente">En attente</SelectItem>
+                        <SelectItem value="Terminé">Terminé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-xs text-steel uppercase tracking-wider">Prix Proposé (FCFA)</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                      <Input 
+                        id="price" 
+                        type="number"
+                        className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                        value={newProject.price}
+                        onChange={(e) => setNewProject({...newProject, price: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gain" className="text-xs text-steel uppercase tracking-wider">Gain Estimé (FCFA)</Label>
+                    <div className="relative">
+                      <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                      <Input 
+                        id="gain" 
+                        type="number"
+                        className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                        value={newProject.gain}
+                        onChange={(e) => setNewProject({...newProject, gain: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-4">
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-br from-lime to-lime-dim text-night font-bold h-11 rounded-xl shadow-lg"
+                  >
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer le Projet"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {error && (
@@ -265,17 +346,20 @@ export default function ProjectsPage() {
                     {project?.deadline || 'N/A'}
                   </div>
                   <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-lime" />
-                    {project?.price?.toLocaleString() || 0} XAF
+                    <Clock className="w-3 h-3 text-lime" />
+                    {project?.status === 'Terminé' ? 'Finalisé' : 'En cours'}
                   </div>
                 </div>
               </div>
 
               <Button 
-                onClick={() => openEdit(project)}
                 className="w-full h-8 mt-4 bg-white/5 hover:bg-lime hover:text-night text-white border border-white/10 hover:border-lime transition-all duration-300 font-bold text-xs"
+                onClick={() => {
+                  setSelectedProject(project);
+                  setIsEditOpen(true);
+                }}
               >
-                Modifier
+                Gérer le Projet
               </Button>
             </Card>
           </div>
@@ -286,56 +370,73 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {/* Edit Project Modal */}
-      <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
-        <DialogContent className="glass-card border-white/10 text-white max-w-md">
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[450px] bg-night-200 border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Modifier le <span className="text-lime">Projet</span></DialogTitle>
+            <DialogTitle className="text-xl font-bold">Mettre à jour : <span className="text-lime">{selectedProject?.name}</span></DialogTitle>
+            <DialogDescription className="text-steel text-xs font-mono">
+              {"// Modifiez l'état d'avancement et les échéances."}
+            </DialogDescription>
           </DialogHeader>
+          
           {selectedProject && (
-            <form onSubmit={handleUpdateProject} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Statut</Label>
-                <Select 
-                  value={selectedProject.status} 
-                  onValueChange={(v) => setSelectedProject({...selectedProject, status: v})}
-                >
-                  <SelectTrigger className="bg-night-100 border-white/10 text-white h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-night-100 border-white/10 text-white">
-                    <SelectItem value="En cours">En cours</SelectItem>
-                    <SelectItem value="Terminé">Terminé</SelectItem>
-                    <SelectItem value="En attente">En attente</SelectItem>
-                    <SelectItem value="Annulé">Annulé</SelectItem>
-                  </SelectContent>
-                </Select>
+            <form onSubmit={handleUpdateProject} className="space-y-6 py-4">
+              <div className="space-y-3">
+                <Label className="text-xs text-steel uppercase tracking-wider">Statut du Projet</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['En attente', 'En cours', 'Terminé'].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setSelectedProject({...selectedProject, status})}
+                      className={cn(
+                        "py-2 px-1 rounded-lg border text-[10px] font-bold transition-all",
+                        selectedProject.status === status 
+                          ? "bg-lime border-lime text-night" 
+                          : "bg-white/5 border-white/10 text-steel hover:border-white/20"
+                      )}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Progression ({selectedProject.progress}%)</Label>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-steel uppercase tracking-wider">Progression</Label>
+                  <span className="text-lime font-bold text-xs">{selectedProject.progress}%</span>
+                </div>
                 <Input 
-                  type="range"
-                  min="0"
-                  max="100"
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="5"
                   value={selectedProject.progress}
-                  onChange={(e) => setSelectedProject({...selectedProject, progress: parseInt(e.target.value)})}
-                  className="h-2 bg-night-100 border-white/10 accent-lime" 
+                  onChange={(e) => setSelectedProject({...selectedProject, progress: Number(e.target.value)})}
+                  className="h-2 bg-white/5 accent-lime"
                 />
               </div>
+
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-steel">Deadline</Label>
-                <Input 
-                  type="date"
-                  value={selectedProject.deadline}
-                  onChange={(e) => setSelectedProject({...selectedProject, deadline: e.target.value})}
-                  className="bg-night-100 border-white/10 text-white h-9" 
-                />
+                <Label htmlFor="edit-deadline" className="text-xs text-steel uppercase tracking-wider">Nouvelle Deadline</Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lime/50" />
+                  <Input 
+                    id="edit-deadline" 
+                    type="date"
+                    className="pl-10 bg-white/5 border-white/10 h-10 text-sm"
+                    value={selectedProject.deadline}
+                    onChange={(e) => setSelectedProject({...selectedProject, deadline: e.target.value})}
+                  />
+                </div>
               </div>
-              <DialogFooter className="pt-4">
+
+              <DialogFooter>
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="w-full bg-lime text-night font-bold glow-neon"
+                  className="w-full bg-lime text-night font-bold h-11 rounded-xl"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enregistrer les modifications"}
                 </Button>

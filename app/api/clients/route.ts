@@ -16,24 +16,28 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const data = await req.json();
-    const result = await createClient(data);
-    return NextResponse.json(result);
+    const body = await request.json();
+    const id = await createClient(body);
+    return NextResponse.json({ id, message: "Client créé avec succès" });
   } catch (error: any) {
-    console.error('Create Client Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Clients API POST Error:', error);
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(request: Request) {
   try {
-    const { id, ...data } = await req.json();
-    const result = await updateClient(id, data);
-    return NextResponse.json(result);
+    const body = await request.json();
+    const { id, ...clientData } = body;
+    if (!id) {
+      return NextResponse.json({ error: "ID du client manquant" }, { status: 400 });
+    }
+    await updateClient(id, clientData);
+    return NextResponse.json({ message: "Client mis à jour avec succès" });
   } catch (error: any) {
-    console.error('Update Client Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Clients API PATCH Error:', error);
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

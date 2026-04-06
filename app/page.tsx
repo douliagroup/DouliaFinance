@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from "@/lib/utils";
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
@@ -26,7 +27,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn } from '@/lib/utils';
+import Header from '@/components/Header';
 import { AllData } from '@/lib/types';
 
 export default function Dashboard() {
@@ -77,7 +78,7 @@ export default function Dashboard() {
   const stats = [
     { 
       title: 'Revenus Totaux', 
-      value: `${totalRevenues.toLocaleString()} XAF`, 
+      value: `${totalRevenues.toLocaleString()} FCFA`, 
       change: '+12.5%', 
       trend: 'up', 
       icon: Wallet,
@@ -126,18 +127,7 @@ export default function Dashboard() {
           </h1>
           <p className="text-xs font-mono text-lime mt-1">{"// Bienvenue dans votre centre de commande financier intelligent."}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end">
-            <p className="text-[10px] font-mono text-lime uppercase tracking-widest">{"// Temps Réel"}</p>
-            <p className="text-sm font-bold text-white tabular-nums">
-              {new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} | {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 bg-lime/10 px-4 py-2 rounded-full border border-lime/20 glow-neon">
-            <Sparkles className="w-4 h-4 text-lime" />
-            <span className="text-[10px] font-mono font-bold text-lime uppercase tracking-wider">{"// DOULIA OMNI-IA"}</span>
-          </div>
-        </div>
+        <Header />
       </div>
 
       {error && (

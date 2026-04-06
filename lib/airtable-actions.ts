@@ -129,9 +129,7 @@ export async function saveSimulation(data: any): Promise<string> {
   }
 }
 
-// Generic Write Functions
-async function createRecord(tableId: string, fields: any) {
-  console.log(`[WRITE] Création dans ${tableId}:`, fields);
+export async function createRecord(tableId: string, fields: any): Promise<any> {
   try {
     const response = await airtableFetch(tableId, {
       method: 'POST',
@@ -139,130 +137,85 @@ async function createRecord(tableId: string, fields: any) {
     });
     return response;
   } catch (error) {
-    console.error(`Erreur création ${tableId}:`, error);
+    console.error(`Error creating record in ${tableId}:`, error);
     throw error;
   }
 }
 
-async function updateRecord(tableId: string, recordId: string, fields: any) {
-  console.log(`[UPDATE] Modification ${tableId} (${recordId}):`, fields);
+export async function updateRecord(tableId: string, id: string, fields: any): Promise<any> {
   try {
     const response = await airtableFetch(tableId, {
       method: 'PATCH',
       body: { 
         records: [
-          { id: recordId, fields }
+          {
+            id,
+            fields
+          }
         ]
       }
     });
     return response;
   } catch (error) {
-    console.error(`Erreur modification ${tableId}:`, error);
+    console.error(`Error updating record ${id} in ${tableId}:`, error);
     throw error;
   }
 }
 
-// Specific Actions
-export async function createClient(data: Partial<Client>) {
+export async function createClient(client: Partial<Client>): Promise<string> {
   const fields = {
-    "Nom de l'Entreprise": data.name,
-    "Contact Clé": data.contact,
-    "Email": data.email,
-    "Secteur": data.sector,
-    "Statut": data.status || "Actif",
-    "Type": data.type || "Client",
-    "Téléphone": data.phone
+    "Nom de l'Entreprise": client.name,
+    "Contact Clé": client.contact,
+    "Email": client.email,
+    "Secteur": client.sector,
+    "Statut": client.status || 'Actif',
+    "Type": client.type,
+    "Téléphone": client.phone
   };
-  return createRecord(TABLES.CLIENTS, fields);
+
+  const response = await createRecord(TABLES.CLIENTS, fields);
+  return response.id;
 }
 
-export async function updateClient(id: string, data: Partial<Client>) {
+export async function updateClient(id: string, client: Partial<Client>): Promise<void> {
   const fields: any = {};
-  if (data.name) fields["Nom de l'Entreprise"] = data.name;
-  if (data.contact) fields["Contact Clé"] = data.contact;
-  if (data.email) fields["Email"] = data.email;
-  if (data.sector) fields["Secteur"] = data.sector;
-  if (data.status) fields["Statut"] = data.status;
-  if (data.type) fields["Type"] = data.type;
-  if (data.phone) fields["Téléphone"] = data.phone;
-  
-  return updateRecord(TABLES.CLIENTS, id, fields);
+  if (client.name) fields["Nom de l'Entreprise"] = client.name;
+  if (client.contact) fields["Contact Clé"] = client.contact;
+  if (client.email) fields["Email"] = client.email;
+  if (client.sector) fields["Secteur"] = client.sector;
+  if (client.status) fields["Statut"] = client.status;
+  if (client.type) fields["Type"] = client.type;
+  if (client.phone) fields["Téléphone"] = client.phone;
+
+  await updateRecord(TABLES.CLIENTS, id, fields);
 }
 
-export async function createProject(data: Partial<Project>) {
+export async function createProject(project: Partial<Project>): Promise<string> {
   const fields = {
-    "Nom du Projet": data.name,
-    "Client": data.client,
-    "Statut": data.status || "En cours",
-    "Progression": data.progress || 0,
-    "Deadline": data.deadline,
-    "Gain Annuel Estimé": data.gain,
-    "Prix Final Proposé": data.price
+    "Nom du Projet": project.name,
+    "Client": project.client,
+    "Statut": project.status || 'En cours',
+    "Progression": project.progress || 0,
+    "Deadline": project.deadline,
+    "Gain Annuel Estimé": project.gain || 0,
+    "Prix Final Proposé": project.price || 0
   };
-  return createRecord(TABLES.PROJETS, fields);
+
+  const response = await createRecord(TABLES.PROJETS, fields);
+  return response.id;
 }
 
-export async function updateProject(id: string, data: Partial<Project>) {
+export async function updateProject(id: string, project: Partial<Project>): Promise<void> {
   const fields: any = {};
-  if (data.name) fields["Nom du Projet"] = data.name;
-  if (data.status) fields["Statut"] = data.status;
-  if (data.progress !== undefined) fields["Progression"] = data.progress;
-  if (data.deadline) fields["Deadline"] = data.deadline;
-  if (data.gain) fields["Gain Annuel Estimé"] = data.gain;
-  if (data.price) fields["Prix Final Proposé"] = data.price;
-  
-  return updateRecord(TABLES.PROJETS, id, fields);
-}
+  if (project.name) fields["Nom du Projet"] = project.name;
+  if (project.client) fields["Client"] = project.client;
+  if (project.status) fields["Statut"] = project.status;
+  if (project.progress !== undefined) fields["Progression"] = project.progress;
+  if (project.deadline) fields["Deadline"] = project.deadline;
+  if (project.gain !== undefined) fields["Gain Annuel Estimé"] = project.gain;
+  if (project.price !== undefined) fields["Prix Final Proposé"] = project.price;
 
-export async function createService(data: Partial<Service>) {
-  const fields = {
-    "Nom du Service": data.name,
-    "Prix Installation": data.setupPrice,
-    "Maintenance Mensuelle": data.monthlyPrice,
-    "Prix": data.price,
-    "Cycle": data.duration,
-    "Catégorie": data.category,
-    "Description": data.description
-  };
-  return createRecord(TABLES.SERVICES, fields);
-}
-
-export async function updateService(id: string, data: Partial<Service>) {
-  const fields: any = {};
-  if (data.name) fields["Nom du Service"] = data.name;
-  if (data.setupPrice !== undefined) fields["Prix Installation"] = data.setupPrice;
-  if (data.monthlyPrice !== undefined) fields["Maintenance Mensuelle"] = data.monthlyPrice;
-  if (data.price !== undefined) fields["Prix"] = data.price;
-  if (data.duration) fields["Cycle"] = data.duration;
-  if (data.category) fields["Catégorie"] = data.category;
-  if (data.description) fields["Description"] = data.description;
-  
-  return updateRecord(TABLES.SERVICES, id, fields);
-}
-
-export async function createBudgetItem(data: Partial<BudgetItem>) {
-  const fields = {
-    "Date": data.date,
-    "Catégorie": data.category,
-    "Description": data.description,
-    "Type": data.type,
-    "Montant": data.amount
-  };
-  return createRecord(TABLES.BUDGET, fields);
-}
-export async function createBillingDocument(data: any) {
-  const fields = {
-    "Nom": `${data.type} ${data.number}`,
-    "Type": data.type,
-    "Client": [data.clientId], // Assuming it's a linked record
-    "Date": data.date,
-    "Échéance": data.dueDate,
-    "Numéro": data.number,
-    "Statut": data.status,
-    "Total": data.total,
-    "Articles": JSON.stringify(data.items) // Store as JSON string if no specific table
-  };
-  return createRecord(TABLES.DOCUMENTS, fields);
+  await updateRecord(TABLES.PROJETS, id, fields);
 }
 
 export async function getAllData(): Promise<AllData> {

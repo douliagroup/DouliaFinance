@@ -16,24 +16,28 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const data = await req.json();
-    const result = await createProject(data);
-    return NextResponse.json(result);
+    const body = await request.json();
+    const id = await createProject(body);
+    return NextResponse.json({ id, message: "Projet créé avec succès" });
   } catch (error: any) {
-    console.error('Create Project Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Projects API POST Error:', error);
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(request: Request) {
   try {
-    const { id, ...data } = await req.json();
-    const result = await updateProject(id, data);
-    return NextResponse.json(result);
+    const body = await request.json();
+    const { id, ...projectData } = body;
+    if (!id) {
+      return NextResponse.json({ error: "ID du projet manquant" }, { status: 400 });
+    }
+    await updateProject(id, projectData);
+    return NextResponse.json({ message: "Projet mis à jour avec succès" });
   } catch (error: any) {
-    console.error('Update Project Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Projects API PATCH Error:', error);
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

@@ -26,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from '@/lib/utils';
 import { Project } from '@/lib/types';
 
 export default function ProjectsPage() {

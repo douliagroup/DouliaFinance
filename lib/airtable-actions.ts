@@ -10,13 +10,13 @@ async function fetchRecords<T>(tableId: string): Promise<T[]> {
     console.log(`[DEBUG] Table: ${tableId} | Records trouvés: ${data.records?.length || 0}`);
     
     if (!data.records || data.records.length === 0) {
-      throw new Error(`Aucun enregistrement trouvé dans la table: ${tableId}`);
+      return [];
     }
     
     return data.records.map((r: any) => ({ id: r.id, ...r.fields } as unknown as T));
   } catch (error: any) {
     // If Grid view fails, try without view
-    if (error.message?.includes('Aucun enregistrement trouvé')) throw error;
+    if (error.message?.includes('Airtable Error')) throw error;
     
     console.warn(`View "Grid view" not found for table ${tableId}, trying without view.`);
     try {
@@ -26,13 +26,13 @@ async function fetchRecords<T>(tableId: string): Promise<T[]> {
       console.log(`[DEBUG] Table: ${tableId} (no view) | Records trouvés: ${data.records?.length || 0}`);
       
       if (!data.records || data.records.length === 0) {
-        throw new Error(`Aucun enregistrement trouvé dans la table: ${tableId} (sans vue)`);
+        return [];
       }
       
       return data.records.map((r: any) => ({ id: r.id, ...r.fields } as unknown as T));
     } catch (innerError: any) {
       console.error(`Failed to fetch records for table ${tableId}:`, innerError);
-      throw innerError;
+      return []; // Return empty array on failure to keep dashboard alive
     }
   }
 }
@@ -216,6 +216,58 @@ export async function updateProject(id: string, project: Partial<Project>): Prom
   if (project.price !== undefined) fields["Prix Final Proposé"] = project.price;
 
   await updateRecord(TABLES.PROJETS, id, fields);
+}
+
+export async function createService(service: Partial<Service>): Promise<string> {
+  const fields = {
+    "Nom du Service": service.name,
+    "Prix Installation": service.setupPrice,
+    "Maintenance Mensuelle": service.monthlyPrice,
+    "Prix": service.price,
+    "Cycle": service.duration,
+    "Catégorie": service.category,
+    "Description": service.description
+  };
+
+  const response = await createRecord(TABLES.SERVICES, fields);
+  return response.id;
+}
+
+export async function updateService(id: string, service: Partial<Service>): Promise<void> {
+  const fields: any = {};
+  if (service.name) fields["Nom du Service"] = service.name;
+  if (service.setupPrice !== undefined) fields["Prix Installation"] = service.setupPrice;
+  if (service.monthlyPrice !== undefined) fields["Maintenance Mensuelle"] = service.monthlyPrice;
+  if (service.price) fields["Prix"] = service.price;
+  if (service.duration) fields["Cycle"] = service.duration;
+  if (service.category) fields["Catégorie"] = service.category;
+  if (service.description) fields["Description"] = service.description;
+
+  await updateRecord(TABLES.SERVICES, id, fields);
+}
+
+export async function createBudgetItem(item: Partial<BudgetItem>): Promise<string> {
+  const fields = {
+    "Date": item.date,
+    "Catégorie": item.category,
+    "Désignation": item.description,
+    "Type": item.type,
+    "Montant Prévu": item.amount
+  };
+
+  const response = await createRecord(TABLES.BUDGET, fields);
+  return response.id;
+}
+
+export async function createBillingDocument(data: any): Promise<any> {
+  const fields = {
+    "Nom": data.name,
+    "Type": data.type,
+    "URL": data.url,
+    "Date": data.date || new Date().toISOString().split('T')[0]
+  };
+
+  return await createRecord(TABLES.DOCUMENTS, fields);
 }
 
 export async function getAllData(): Promise<AllData> {

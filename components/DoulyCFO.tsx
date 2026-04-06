@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2, Download, Mic, MicOff, Volume2, VolumeX, StopCircle, Bot, User } from 'lucide-react';
+import { X, Send, Loader2, Download, Mic, MicOff, Volume2, VolumeX, StopCircle, Bot, User, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
+import { InvoiceModal } from './InvoiceModal';
 
 const tools: { functionDeclarations: FunctionDeclaration[] }[] = [
   {
@@ -322,6 +323,13 @@ export default function DoulyCFO() {
                   >
                     {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </Button>
+                  <InvoiceModal 
+                    trigger={
+                      <Button variant="ghost" size="icon" className="text-steel hover:text-lime w-7 h-7" title="Créer un devis/facture">
+                        <FileText className="w-4 h-4" />
+                      </Button>
+                    }
+                  />
                   <Button variant="ghost" size="icon" onClick={exportToPDF} className="text-steel hover:text-lime w-7 h-7">
                     <Download className="w-4 h-4" />
                   </Button>

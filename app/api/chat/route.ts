@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { getAllData } from "@/lib/airtable-actions";
 import { NextResponse } from "next/server";
-import { Type, FunctionDeclaration } from "@google/genai";
+import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
 
 const tools: { functionDeclarations: FunctionDeclaration[] }[] = [
   {
@@ -62,16 +62,91 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { tool, args } = await req.json();
+    const { messages } = await req.json();
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     
-    if (tool === "web_search") {
-      const searchData = await performSearch(args.query);
-      return NextResponse.json(searchData);
+    if (!geminiKey) {
+      return NextResponse.json({ error: "Gemini API Key missing" }, { status: 500 });
     }
 
-    return NextResponse.json({ error: "Unknown tool" }, { status: 400 });
+    // 1. Fetch Context
+    const contextData = await getAllData();
+    const dataSummary = JSON.stringify(contextData);
+
+    // 2. Initialize Gemini
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
+    const model = "gemini-3-flash-preview";
+    const systemInstruction = `Tu es Douly CFO, l'assistant financier intelligent de DOULIA. 
+    Tu es un Expert Comptable puissant et un stratège d'affaires visionnaire, expert du marché Camerounais (OHADA, fiscalité locale, opportunités sectorielles au Cameroun).
+    Ton rôle est d'aider l'utilisateur à gérer ses finances, analyser son budget, ses clients et ses services avec une rigueur comptable et une vision stratégique.
+    Sois professionnel, précis, analytique et utilise un ton encourageant mais ferme sur la discipline financière. 
+    
+    RÈGLES DE FORMATAGE STRICTES :
+    - NE JAMAIS utiliser d'astérisques (*) ou d'étoiles dans tes réponses.
+    - NE JAMAIS utiliser de balises HTML.
+    - Pour mettre en gras les TITRES et les MOTS CLÉS, utilise uniquement la syntaxe Markdown standard **TEXTE**.
+    - N'utilise pas de tirets (-) pour les listes, utilise des points (.) ou des numéros.
+    
+    CONTEXTE OMNISCIENT (Données réelles de DOULIA) :
+    ${dataSummary}
+    
+    Utilise ces données pour prédire la santé financière, donner des recommandations stratégiques basées sur le contexte camerounais et assurer une gestion optimale.
+    Tu as accès à des outils pour faire des recherches web si nécessaire.
+    Réponds toujours en français.`;
+
+    const contents = messages.map((m: any) => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }]
+    }));
+
+    // 3. Generate Content
+    let response = await ai.models.generateContent({
+      model,
+      contents,
+      config: {
+        systemInstruction,
+        tools,
+      }
+    });
+
+    let functionCalls = response.functionCalls;
+
+    if (functionCalls) {
+      const toolResults = [];
+      for (const call of functionCalls) {
+        if (call.name === "web_search") {
+          const searchData = await performSearch((call.args as any).query);
+          toolResults.push({
+            name: call.name,
+            response: { content: searchData },
+            id: call.id
+          });
+        }
+      }
+
+      // Send tool results back to model
+      response = await ai.models.generateContent({
+        model,
+        contents: [
+          ...contents,
+          response.candidates?.[0]?.content,
+          {
+            role: "user",
+            parts: toolResults.map(tr => ({
+              functionResponse: {
+                name: tr.name,
+                response: tr.response,
+              }
+            }))
+          }
+        ] as any,
+        config: { systemInstruction, tools }
+      });
+    }
+
+    return NextResponse.json({ text: response.text });
   } catch (error: any) {
-    console.error('Tool API Error:', error);
-    return NextResponse.json({ error: error.message || "Tool execution failed" }, { status: 500 });
+    console.error('Chat API Error:', error);
+    return NextResponse.json({ error: error.message || "Chat failed" }, { status: 500 });
   }
 }

@@ -16,7 +16,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
 import { 
   Table, 
   TableBody, 
@@ -38,6 +37,7 @@ import {
   Cell
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { BudgetItem } from '@/lib/types';
 
 const COLORS = ['#A3E635', '#5A6A80', '#8B9BB4', '#141929', '#0B0F1A'];

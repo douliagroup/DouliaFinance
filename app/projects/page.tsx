@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from '@/lib/utils';
 import { Project } from '@/lib/types';
 
 export default function ProjectsPage() {

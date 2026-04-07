@@ -1,33 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2, Download, Mic, MicOff, Volume2, VolumeX, StopCircle, Bot, User, FileText } from 'lucide-react';
+import { X, Send, Loader2, Download, Mic, MicOff, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
-import { InvoiceModal } from './InvoiceModal';
-
-const tools: { functionDeclarations: FunctionDeclaration[] }[] = [
-  {
-    functionDeclarations: [
-      {
-        name: "web_search",
-        description: "Effectue une recherche sur le web pour obtenir des informations financières ou technologiques récentes.",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {
-            query: { type: Type.STRING, description: "La requête de recherche." }
-          },
-          required: ["query"]
-        }
-      }
-    ]
-  }
-];
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,7 +23,6 @@ export default function DoulyCFO() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -95,36 +75,20 @@ export default function DoulyCFO() {
     }
   };
 
-  const stripMarkdown = (text: string) => {
-    return text.replace(/(\*\*|\*|#)/g, '').replace(/\n/g, ' ');
-  };
-
-  const toggleMute = () => {
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    if (newMuted && typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-  };
-
   const speak = (text: string) => {
-    if (isMuted) return;
-    
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Cancel any ongoing speech to avoid overlapping
+      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      const cleanText = stripMarkdown(text);
-      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'fr-FR';
       
-      // Try to find a professional French female voice
+      // Try to find a professional French voice
       const voices = window.speechSynthesis.getVoices();
-      const frenchFemaleVoice = 
-        voices.find(v => v.lang.startsWith('fr') && (v.name.includes('Hortense') || v.name.includes('Julie') || v.name.includes('Google français') || v.name.includes('Premium'))) || 
-        voices.find(v => v.lang.startsWith('fr'));
+      const frenchVoice = voices.find(v => v.lang.startsWith('fr') && v.name.includes('Premium')) || 
+                         voices.find(v => v.lang.startsWith('fr'));
       
-      if (frenchFemaleVoice) utterance.voice = frenchFemaleVoice;
+      if (frenchVoice) utterance.voice = frenchVoice;
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       
@@ -190,99 +154,23 @@ export default function DoulyCFO() {
     setIsLoading(true);
 
     try {
-      const geminiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      if (!geminiKey) throw new Error("Gemini API Key missing");
-
-      // 1. Fetch Context
-      const contextRes = await fetch('/api/chat');
-      const contextData = await contextRes.json();
-      const dataSummary = JSON.stringify(contextData);
-
-      // 2. Initialize Gemini
-      const ai = new GoogleGenAI({ apiKey: geminiKey });
-      const model = "gemini-3-flash-preview";
-      const systemInstruction = `Tu es Douly CFO, l'assistant financier intelligent de DOULIA. 
-      Tu es un Expert Comptable puissant et un stratège d'affaires visionnaire, expert du marché Camerounais (OHADA, fiscalité locale, opportunités sectorielles au Cameroun).
-      Ton rôle est d'aider l'utilisateur à gérer ses finances, analyser son budget, ses clients et ses services avec une rigueur comptable et une vision stratégique.
-      Sois professionnel, précis, analytique et utilise un ton encourageant mais ferme sur la discipline financière. 
-      
-      RÈGLES DE FORMATAGE STRICTES :
-      - NE JAMAIS utiliser d'astérisques (*) ou d'étoiles dans tes réponses.
-      - NE JAMAIS utiliser de balises HTML.
-      - Pour mettre en gras les TITRES et les MOTS CLÉS, utilise uniquement la syntaxe Markdown standard **TEXTE**.
-      - N'utilise pas de tirets (-) pour les listes, utilise des points (.) ou des numéros.
-      
-      CONTEXTE OMNISCIENT (Données réelles de DOULIA) :
-      ${dataSummary}
-      
-      Utilise ces données pour prédire la santé financière, donner des recommandations stratégiques basées sur le contexte camerounais et assurer une gestion optimale.
-      Tu as accès à des outils pour faire des recherches web si nécessaire.
-      Réponds toujours en français.`;
-
-      const contents = newMessages.map((m: any) => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }]
-      }));
-
-      // 3. Generate Content
-      let response = await ai.models.generateContent({
-        model,
-        contents,
-        config: {
-          systemInstruction,
-          tools,
-        }
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
       });
 
-      let functionCalls = response.functionCalls;
+      const data = await response.json();
 
-      if (functionCalls) {
-        const toolResults = [];
-        for (const call of functionCalls) {
-          if (call.name === "web_search") {
-            const toolRes = await fetch('/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tool: call.name, args: call.args }),
-            });
-            const searchData = await toolRes.json();
-            
-            toolResults.push({
-              name: call.name,
-              response: { content: searchData },
-              id: call.id
-            });
-          }
-        }
-
-        // Send tool results back to model
-        response = await ai.models.generateContent({
-          model,
-          contents: [
-            ...contents,
-            response.candidates?.[0]?.content,
-            {
-              role: "user",
-              parts: toolResults.map(tr => ({
-                functionResponse: {
-                  name: tr.name,
-                  response: tr.response,
-                }
-              }))
-            }
-          ] as any,
-          config: { systemInstruction, tools }
-        });
+      if (!response.ok) {
+        throw new Error(data.error || 'Chat failed');
       }
 
-      const assistantContent = response.text || 'Désolé, je n\'ai pas pu générer de réponse.';
+      const assistantContent = data.text || 'Désolé, je n\'ai pas pu générer de réponse.';
       setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
-      
-      // Trigger TTS if not muted
-      speak(assistantContent);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: `Erreur: ${error.message || 'Une erreur est survenue.'}` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, j\'ai rencontré une erreur. Veuillez vérifier votre connexion.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -314,22 +202,6 @@ export default function DoulyCFO() {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={toggleMute} 
-                    className={cn("w-7 h-7 transition-colors", isMuted ? "text-steel hover:text-white" : "text-lime hover:text-lime-glow")}
-                    title={isMuted ? "Activer le son" : "Désactiver le son"}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </Button>
-                  <InvoiceModal 
-                    trigger={
-                      <Button variant="ghost" size="icon" className="text-steel hover:text-lime w-7 h-7" title="Créer un devis/facture">
-                        <FileText className="w-4 h-4" />
-                      </Button>
-                    }
-                  />
                   <Button variant="ghost" size="icon" onClick={exportToPDF} className="text-steel hover:text-lime w-7 h-7">
                     <Download className="w-4 h-4" />
                   </Button>
@@ -339,7 +211,7 @@ export default function DoulyCFO() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-lime/20 scrollbar-track-transparent">
+              <div className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-lime/20 scrollbar-track-transparent">
                 <div className="space-y-4">
                   {messages.map((msg, i) => (
                     <div key={i} className={cn("flex flex-col gap-1", msg.role === 'user' ? "items-end" : "items-start")}>

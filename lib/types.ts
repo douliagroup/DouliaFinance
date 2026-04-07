@@ -46,9 +46,6 @@ export interface Document {
   type?: string;
   url?: string;
   date?: string;
-  client?: string;
-  amount?: number;
-  status?: string;
 }
 
 export interface AllData {
